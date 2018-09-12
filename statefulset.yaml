@@ -1,0 +1,16 @@
+command:
+  - sh
+  - -exc
+  - |
+    unset KAFKA_PORT && \
+    export KAFKA_BROKER_ID=${HOSTNAME##*-} && \
+    EXTERNAL_PORT=`expr {{ .Values.external.firstListenerPort }} + ${KAFKA_BROKER_ID}` && \
+    export KAFKA_ADVERTISED_LISTENERS=
+      PLAINTEXT://${POD_IP}:9092
+{{- if kindIs "string" .Values.external.advertisedListenerTemplate -}}
+    ,EXTERNAL://{{ .Values.external.advertisedListenerTemplate }}
+      {{- end -}}
+{{- if kindIs "string" $advertisedListenersOverride -}}
+    {{ printf ",%s" $advertisedListenersOverride }}
+{{- end }} && \
+    exec /etc/confluent/docker/run
